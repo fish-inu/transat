@@ -1,7 +1,6 @@
-git-deno-doc
-files
-discourse
-lexical
-syntactic
-deno-manual.txt
-test.md
+bin
+include
+lib
+lib64
+test
+pyvenv.cfg

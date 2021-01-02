@@ -1,20 +1,32 @@
 import spacy
-import pandas
+from rich.console import Console
+from rich.markdown import Markdown
+from rich.table import Table
 from spacy.matcher import Matcher
-
+# 注意：rich 暂时不支持 markdown 内的 table 语法。
 nlp = spacy.load("en_core_web_sm")
 doc = nlp("He could defer his job to no one.")
 
-df = pandas.DataFrame([[token.text, token.lemma_, token.pos_, spacy.explain(token.pos_), token.tag_, spacy.explain(token.tag_), token.dep_, spacy.explain(
-    token.dep_), token.shape_, token.is_alpha, token.is_stop] for token in doc], columns=['token', 'lemma', 'pos', 'pos?', 'tag', 'tag?', 'dep', 'dep?', 'shape', 'isAlpha', 'isStop'])
+header = "| " + " | ".join(['token', 'lemma', 'pos', 'pos?', 'tag', 'tag?', 'dep', 'dep?']) + " |" + "\n" 
+sep = "------".join([" | " for i in range(9)]).strip() + "\n"
+data = ""
+for token in doc:
+    text = token.text
+    lemma = token.lemma_
+    pos = token.pos_
+    pos_meaning = spacy.explain(token.pos_)
+    tag = token.tag_
+    tag_meaning = spacy.explain(token.tag_)
+    dep = token.dep_
+    dep_meaning = str(spacy.explain(token.dep_))
+    data += "| " + " | ".join([text, lemma, pos, pos_meaning, tag, tag_meaning, dep, dep_meaning]) + " |" + "\n"
+result = header + sep + data
 
-f = open('test.md', 'w')
-df.to_markdown(f)
-f.close()
-#
+markdown = Markdown(result)
+console = Console()
+console.print(markdown)
+
 # pattern = [{"POS": "NOUN"}, {"TAG": {"IN": ["WDT", "WP", "WP$"]}}]
-
-
 def findClause(doc):
     matcher = Matcher(nlp.vocab)
 
@@ -49,9 +61,3 @@ def findClause(doc):
             # print('------------------------------------\n')
             string = string + '------------------------------------\n'
     return string
-
-
-def write2md(string):
-    f = open('test.md', 'w')
-    f.write(string)
-    f.close()
