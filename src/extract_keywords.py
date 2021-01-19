@@ -8,35 +8,6 @@ import re
 from typing import Iterator, List, Tuple, Dict, Union
 from spacy.tokens import Doc
 
-# 读取英汉大辞典
-def get_dict() -> Iterator[Tuple[str, str]]:
-    f = open('test/英汉大词典.txt', 'r')
-    lines = f.readlines()
-    f.close()
-    for entry in lines:
-        parts = entry.strip().split("\t")
-        yield (parts[0], parts[1])
-
-def count_terms(terms: Iterator[str], use_dict) -> Union[Iterator[Tuple[str, int]], Iterator[Tuple[str, str, int]]]:
-    counter = Counter(terms)
-    line: Tuple[str, int]
-    for line in counter.most_common():
-        term = line[0]
-        freq = line[1]
-        if use_dict:
-            definitions: List = [parts[1]
-                                    for parts in get_dict() if term == parts[0]]
-            if not definitions:
-                yield (term, term, freq)
-            else:
-                yield (term, " --delimiter-- ".join(definitions), freq)
-        else:
-            yield (term, freq)
-
-###
-# ? 提取缩略词
-###
-
 ###
 # ? 提取名词
 ###
@@ -55,13 +26,6 @@ def extract_noun_by_line(line: Doc) -> Iterator[str]:
 # # # # # # # #
 # ? 提取介词短语 👇
 # # # # # # # #
-
-def extract_pp_by_lines(lines: List[str], nlp) -> Iterator[str]:
-    for line in nlp.pipe(lines, batch_size=50):
-        line: Doc
-        phrases = extract_pp_by_line(line)
-        for phrase in phrases:
-            yield phrase
 
 def extract_pp_by_line(line: Doc) -> Iterator[str]:
     for sent in line.sents:
@@ -122,29 +86,60 @@ def extract_np_by_line(line: Doc) -> Iterator[str]:
             if len(np) > 1:
                 yield np.text
 
-###  
+###
+# ? resuable functions 👇
+###
+
+# 读取英汉大辞典
+def get_dict() -> Iterator[Tuple[str, str]]:
+    f = open('test/英汉大词典.txt', 'r')
+    lines = f.readlines()
+    f.close()
+    for entry in lines:
+        parts = entry.strip().split("\t")
+        yield (parts[0], parts[1])
+
+def count_terms(terms: Iterator[str], use_dict) -> Union[Iterator[Tuple[str, int]], Iterator[Tuple[str, str, int]]]:
+    counter = Counter(terms)
+    line: Tuple[str, int]
+    for line in counter.most_common():
+        term = line[0]
+        freq = line[1]
+        if use_dict:
+            definitions: List = [parts[1]
+                                    for parts in get_dict() if term == parts[0]]
+            if not definitions:
+                yield (term, term, freq)
+            else:
+                yield (term, " --delimiter-- ".join(definitions), freq)
+        else:
+            yield (term, freq)
+
+def extract_terms_by_lines(lines: List[str], nlp, category) -> Iterator[str]:
+    line: Doc
+    for line in nlp.pipe(lines, batch_size=50):
+        if category == "noun":
+            phrases = extract_noun_by_line(line)
+        elif category == "np":
+            phrases = extract_np_by_line(line)
+        elif category == "vp":
+            phrases = extract_vb_by_line(line)
+        elif category == "pp":
+            phrases = extract_pp_by_line(line)            
+        for phrase in phrases:
+            yield phrase
+
 # ?主函数 👇
 ###
 def extract(lines: List[str], nlp, use_dict=False, category=None):
     # extracting... 👇
     try:
-        if category == "noun":
-            nouns_ = extract_noun_by_lines(lines, nlp)
-            return count_terms(nouns_, use_dict)
-        if category == "pp":
-            phrases = extract_pp_by_lines(lines, nlp)
-            return count_terms(phrases, use_dict)
-        if category == "vp":
-            phrases = extract_vb_by_lines(lines, nlp)
-            return count_terms(phrases, use_dict)
-        if category == "np":
-            phrases = extract_np_by_lines(lines, nlp)
-            return count_terms(phrases, use_dict)
+        terms: Iterator[str] = extract_terms_by_lines(lines, nlp, category)
+        return count_terms(terms, use_dict)
     except:
         from rich.console import Console
         console = Console()
         console.print_exception()
-
 
 def temp():
     if not any([nouns, verbs, ners, noun_chunks]):
