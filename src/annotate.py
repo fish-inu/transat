@@ -1,32 +1,26 @@
-import spacy
-from rich.console import Console
-from rich.markdown import Markdown
-from rich.table import Table
-from spacy.matcher import Matcher
+from . import nlp
+
+# TODO: 查看nlp.defaults 是否有 token_match
 # 注意：rich 暂时不支持 markdown 内的 table 语法。
-nlp = spacy.load("en_core_web_sm")
-doc = nlp("He could defer his job to no one.")
 
-header = "| " + " | ".join(['token', 'lemma', 'pos', 'pos?', 'tag', 'tag?', 'dep', 'dep?']) + " |" + "\n" 
-sep = "------".join([" | " for i in range(9)]).strip() + "\n"
-data = ""
-for token in doc:
-    text = token.text
-    lemma = token.lemma_
-    pos = token.pos_
-    pos_meaning = spacy.explain(token.pos_)
-    tag = token.tag_
-    tag_meaning = spacy.explain(token.tag_)
-    dep = token.dep_
-    dep_meaning = str(spacy.explain(token.dep_))
-    data += "| " + " | ".join([text, lemma, pos, pos_meaning, tag, tag_meaning, dep, dep_meaning]) + " |" + "\n"
-result = header + sep + data
+# 总结 askubuntu-posts 用时
+# 11:23
+def parse_file(file_path):
+    with open(file_path) as infile: 
+        for line in infile:
+            if line.strip():
+                doc = nlp(line.strip())
+                for sent in doc.sents:
+                    new_text = ""
+                    for token in sent:
+                        new_text += f"{token.text}_{token.dep_} "
+                    print(new_text.strip())
+parse_file("/home/fish/fish-backup/home/fish/search/exchange/temp")
 
-markdown = Markdown(result)
-console = Console()
-console.print(markdown)
 
 # pattern = [{"POS": "NOUN"}, {"TAG": {"IN": ["WDT", "WP", "WP$"]}}]
+
+
 def findClause(doc):
     matcher = Matcher(nlp.vocab)
 
