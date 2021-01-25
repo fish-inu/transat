@@ -5,7 +5,7 @@
 # 提取关键词
 from collections import Counter
 import re
-from typing import Iterator, List, Tuple, Dict, Union
+from typing import Callable, Iterator, List, Tuple, Dict, Union
 from spacy.tokens import Doc
 
 ###
@@ -115,17 +115,9 @@ def count_terms(terms: Iterator[str], use_dict) -> Union[Iterator[Tuple[str, int
         else:
             yield (term, freq)
 
-def extract_terms_by_lines(lines: List[str], nlp, category) -> Iterator[str]:
-    line: Doc
-    for line in nlp.pipe(lines, batch_size=50):
-        if category == "noun":
-            phrases = extract_noun_by_line(line)
-        elif category == "np":
-            phrases = extract_np_by_line(line)
-        elif category == "vp":
-            phrases = extract_vb_by_line(line)
-        elif category == "pp":
-            phrases = extract_pp_by_line(line)            
+def extract_terms_by_lines(lines: List[str], nlp, extract_terms_by_line: Callable) -> Iterator[str]:
+    for line in nlp.pipe(lines, batch_size=50):    
+        phrases = extract_terms_by_line(line)
         for phrase in phrases:
             yield phrase
 
@@ -134,8 +126,18 @@ def extract_terms_by_lines(lines: List[str], nlp, category) -> Iterator[str]:
 def extract(lines: List[str], nlp, use_dict=False, category=None):
     # extracting... 👇
     try:
-        terms: Iterator[str] = extract_terms_by_lines(lines, nlp, category)
-        return count_terms(terms, use_dict)
+        if category == "noun":
+            terms: Iterator[str] = extract_terms_by_lines(lines, nlp, extract_noun_by_line)
+            return count_terms(terms, use_dict)
+        elif category == "np":
+            terms: Iterator[str] = extract_terms_by_lines(lines, nlp, extract_np_by_line)
+            return count_terms(terms, use_dict)
+        elif category == "vp":
+            terms: Iterator[str] = extract_terms_by_lines(lines, nlp, extract_vb_by_line)
+            return count_terms(terms, use_dict)
+        elif category == "pp":
+            terms: Iterator[str] = extract_terms_by_lines(lines, nlp, extract_pp_by_line)
+            return count_terms(terms, use_dict)
     except:
         from rich.console import Console
         console = Console()
