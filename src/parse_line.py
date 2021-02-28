@@ -16,10 +16,12 @@ def parse_sent(sent):
         tag_meaning = explain(token.tag_)
         dep = token.dep_
         dep_meaning = str(explain(token.dep_))
+        head = token.head.text
         yield {
             'word': word,
             'lemma': lemma,
             'pos': f'{pos} -> {pos_meaning}',
             'tag': f'{tag} -> {tag_meaning}',
-            'dep': f'{dep} -> {dep_meaning}'
+            'dep': f'{dep} -> {dep_meaning}',
+            'head': head
         }

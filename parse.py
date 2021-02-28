@@ -10,11 +10,13 @@ def parse(text):
     for sent in sents['body']:
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("token")
-        table.add_column("lemma")
+        #table.add_column("lemma")
         table.add_column("pos")
         table.add_column("tag")
         table.add_column("dep")
+        table.add_column("head")
         for token in sent:
-            table.add_row(token['word'], token['lemma'], token['pos'], token['tag'], token['dep'])
+            table.add_row(token['word'], token['pos'] , token['tag'], token['dep'], token['head'])
+            #table.add_row(token['word'], token['lemma'], token['pos'], token['tag'], token['dep'])
         console.print(table)
 

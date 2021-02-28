@@ -13,7 +13,6 @@ extract_cmd.add_argument("line", nargs="?", default=None)
 extract_cmd.add_argument("-f", help="文件名")
 # parse subcommand
 parse_cmd = subparsers.add_parser("parse", help="分析句子")
-parse_cmd.add_argument("line")
 ###
 # ? 开始...
 ###
@@ -28,6 +27,6 @@ if sys.argv[1] == "extract":
         extract(line=args.line, category=args.category)
 # ! parse
 elif sys.argv[1] == "parse":
-    if args.line:
-        from parse import parse
-        parse(args.line)
+    line = input("input sentence:\n")
+    from parse import parse
+    parse(line)

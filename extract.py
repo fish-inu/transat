@@ -20,6 +20,6 @@ def extract(line: str = None, file: Optional[Path] = None, category = None):
     response = requests.post(f"http://127.0.0.1:8000/extract/{category}", json={"lines": lines})
     object = response.json()
     #
-    for (phrase, freq) in object["body"]:
-        print(f'{phrase}\t{freq}')
+    for (text, freq) in object["body"]:
+        print(f'{text}\t{freq}')
 
